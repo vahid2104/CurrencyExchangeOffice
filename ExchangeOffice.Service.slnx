@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ExchangeOffice.ConsoleClient/ExchangeOffice.ConsoleClient.csproj" />
+  <Project Path="ExchangeOffice.Service/ExchangeOffice.Service.csproj" />
+</Solution>
