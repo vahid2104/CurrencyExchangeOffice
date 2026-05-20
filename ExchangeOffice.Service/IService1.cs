@@ -10,5 +10,8 @@ namespace ExchangeOffice.Service
 
         [OperationContract]
         decimal Add(decimal firstNumber, decimal secondNumber);
+
+        [OperationContract]
+        decimal GetCurrentExchangeRate(string currencyCode);
     }
 }

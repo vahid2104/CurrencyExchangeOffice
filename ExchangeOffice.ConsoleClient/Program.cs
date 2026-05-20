@@ -32,6 +32,27 @@ namespace ExchangeOffice.ConsoleClient
                 decimal result = channel.Add(10.50m, 20.25m);
                 Console.WriteLine($"Add(10.50, 20.25) = {result}");
 
+                // Call GetCurrentExchangeRate for USD and EUR
+                try
+                {
+                    decimal usdRate = channel.GetCurrentExchangeRate("USD");
+                    Console.WriteLine($"Current USD rate (mid): {usdRate}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Failed to get USD rate: " + ex.Message);
+                }
+
+                try
+                {
+                    decimal eurRate = channel.GetCurrentExchangeRate("EUR");
+                    Console.WriteLine($"Current EUR rate (mid): {eurRate}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Failed to get EUR rate: " + ex.Message);
+                }
+
                 // Close channel gracefully
                 try
                 {

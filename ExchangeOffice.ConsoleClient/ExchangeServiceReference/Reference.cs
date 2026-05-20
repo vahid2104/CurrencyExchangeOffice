@@ -12,6 +12,9 @@ namespace ExchangeServiceReference
 
         [OperationContract]
         decimal Add(decimal firstNumber, decimal secondNumber);
+
+        [OperationContract]
+        decimal GetCurrentExchangeRate(string currencyCode);
     }
 
     // Lightweight client proxy using ClientBase<T>
@@ -27,6 +30,11 @@ namespace ExchangeServiceReference
         public decimal Add(decimal firstNumber, decimal secondNumber)
         {
             return Channel.Add(firstNumber, secondNumber);
+        }
+
+        public decimal GetCurrentExchangeRate(string currencyCode)
+        {
+            return Channel.GetCurrentExchangeRate(currencyCode);
         }
     }
 }
