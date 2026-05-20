@@ -16,8 +16,13 @@ BEGIN
 	CREATE TABLE dbo.Users (
 		UserId INT IDENTITY PRIMARY KEY,
 		FullName NVARCHAR(100) NOT NULL,
+		Username NVARCHAR(50) NULL,
+		PasswordHash NVARCHAR(256) NULL,
 		CreatedAt DATETIME NOT NULL DEFAULT GETDATE()
-	);
+	 );
+
+	-- unique index on Username for non-null values
+	CREATE UNIQUE INDEX IX_Users_Username ON dbo.Users(Username) WHERE Username IS NOT NULL;
 END
 GO
 
@@ -31,6 +36,27 @@ BEGIN
 		CONSTRAINT UQ_UserCurrency UNIQUE (UserId, CurrencyCode),
 		CONSTRAINT FK_Balances_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(UserId) ON DELETE CASCADE
 	);
+END
+GO
+
+-- If the Users table already exists, ensure username/password columns exist (safe migration)
+IF OBJECT_ID('dbo.Users', 'U') IS NOT NULL
+BEGIN
+	IF COL_LENGTH('dbo.Users', 'Username') IS NULL
+	BEGIN
+		ALTER TABLE dbo.Users ADD Username NVARCHAR(50) NULL;
+	END
+
+	IF COL_LENGTH('dbo.Users', 'PasswordHash') IS NULL
+	BEGIN
+		ALTER TABLE dbo.Users ADD PasswordHash NVARCHAR(256) NULL;
+	END
+
+	-- create unique filtered index if not exists
+	IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Users_Username' AND object_id = OBJECT_ID('dbo.Users'))
+	BEGIN
+		EXEC('CREATE UNIQUE INDEX IX_Users_Username ON dbo.Users(Username) WHERE Username IS NOT NULL');
+	END
 END
 GO
 

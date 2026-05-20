@@ -162,6 +162,70 @@ namespace ExchangeOffice.Service
             }
         }
 
+        public int RegisterUser(string fullName, string username, string password)
+        {
+            if (string.IsNullOrWhiteSpace(fullName))
+                throw new FaultException("Full name must be provided.");
+            if (string.IsNullOrWhiteSpace(username))
+                throw new FaultException("Username must be provided.");
+            if (string.IsNullOrWhiteSpace(password) || password.Length < 4)
+                throw new FaultException("Password must be at least 4 characters.");
+
+            username = username.Trim();
+            try
+            {
+                if (_repo.UsernameExists(username))
+                    throw new FaultException("Username is already taken.");
+
+                var hash = ComputeSha256Hash(password);
+                return _repo.RegisterUser(fullName.Trim(), username, hash);
+            }
+            catch (FaultException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new FaultException($"Error registering user: {ex.Message}");
+            }
+        }
+
+        public int LoginUser(string username, string password)
+        {
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+                throw new FaultException("Username and password must be provided.");
+
+            username = username.Trim();
+            try
+            {
+                var hash = ComputeSha256Hash(password);
+                var userId = _repo.LoginUser(username, hash);
+                if (userId <= 0)
+                    throw new FaultException("Invalid username or password.");
+                return userId;
+            }
+            catch (FaultException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new FaultException($"Error logging in: {ex.Message}");
+            }
+        }
+
+        private static string ComputeSha256Hash(string raw)
+        {
+            using (var sha = System.Security.Cryptography.SHA256.Create())
+            {
+                var bytes = System.Text.Encoding.UTF8.GetBytes(raw);
+                var hash = sha.ComputeHash(bytes);
+                var sb = new StringBuilder();
+                foreach (var b in hash) sb.Append(b.ToString("x2"));
+                return sb.ToString();
+            }
+        }
+
         public decimal TopUpBalance(int userId, string currencyCode, decimal amount)
         {
             currencyCode = (currencyCode ?? "PLN").Trim().ToUpperInvariant();

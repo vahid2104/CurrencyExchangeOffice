@@ -1,0 +1,125 @@
+<Window x:Class="ExchangeOffice.WpfClient.DashboardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Dashboard - Currency Exchange" Height="720" Width="980" WindowStartupLocation="CenterScreen">
+    <Grid Background="#F3F6FA">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="56" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Top header -->
+        <Border Grid.Row="0" Background="#2563EB" Padding="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Currency Exchange Office" Foreground="White" FontSize="16" FontWeight="Bold" />
+                    <TextBlock Text="  |  " Foreground="#BFDBFE" />
+                    <TextBlock x:Name="TxtLoggedInUser" Foreground="#BFDBFE" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="BtnLogout" Click="BtnLogout_Click" Margin="8,0,0,0">Logout</Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Margin="12">
+                <UniformGrid Columns="2" Rows="3" Margin="0,0,0,12">
+                    <!-- Service Status -->
+                    <Border Padding="12" Background="White" CornerRadius="6" Margin="6" BorderBrush="#E6EEF8" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Service Status" FontWeight="SemiBold" />
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button x:Name="BtnStatus" Click="BtnStatus_Click" Width="140">Check Service Status</Button>
+                                <TextBox x:Name="TxtStatus" Margin="8,0,0,0" IsReadOnly="True" Width="300" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Current Rates -->
+                    <Border Padding="12" Background="White" CornerRadius="6" Margin="6" BorderBrush="#E6EEF8" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Current Rates" FontWeight="SemiBold" />
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button x:Name="BtnUsdRate" Click="BtnUsdRate_Click" Width="100">USD</Button>
+                                <Button x:Name="BtnEurRate" Click="BtnEurRate_Click" Width="100" Margin="8,0,0,0">EUR</Button>
+                                <TextBox x:Name="TxtRates" Margin="8,0,0,0" IsReadOnly="True" Width="200" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Historical Rates -->
+                    <Border Padding="12" Background="White" CornerRadius="6" Margin="6" BorderBrush="#E6EEF8" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Historical Rates" FontWeight="SemiBold" />
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <ComboBox x:Name="CmbHistCurrency" Width="100">
+                                    <ComboBoxItem>USD</ComboBoxItem>
+                                    <ComboBoxItem>EUR</ComboBoxItem>
+                                    <ComboBoxItem>GBP</ComboBoxItem>
+                                    <ComboBoxItem>CHF</ComboBoxItem>
+                                </ComboBox>
+                                <TextBox x:Name="TxtHistStart" Width="120" Margin="8,0,0,0" />
+                                <TextBox x:Name="TxtHistEnd" Width="120" Margin="8,0,0,0" />
+                                <Button x:Name="BtnHistoricalRates" Click="BtnHistoricalRates_Click" Margin="8,0,0,0">Get</Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Top Up -->
+                    <Border Padding="12" Background="White" CornerRadius="6" Margin="6" BorderBrush="#E6EEF8" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Top Up Balance" FontWeight="SemiBold" />
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <ComboBox x:Name="CmbTopUpCurrency" Width="100">
+                                    <ComboBoxItem>PLN</ComboBoxItem>
+                                    <ComboBoxItem>USD</ComboBoxItem>
+                                    <ComboBoxItem>EUR</ComboBoxItem>
+                                    <ComboBoxItem>GBP</ComboBoxItem>
+                                    <ComboBoxItem>CHF</ComboBoxItem>
+                                </ComboBox>
+                                <TextBox x:Name="TxtTopUpAmount" Width="120" Margin="8,0,0,0" />
+                                <Button x:Name="BtnTopUp" Click="BtnTopUp_Click" Margin="8,0,0,0">Top Up</Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Buy/Sell -->
+                    <Border Padding="12" Background="White" CornerRadius="6" Margin="6" BorderBrush="#E6EEF8" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Buy / Sell" FontWeight="SemiBold" />
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <ComboBox x:Name="CmbTradeCurrency" Width="100">
+                                    <ComboBoxItem>USD</ComboBoxItem>
+                                    <ComboBoxItem>EUR</ComboBoxItem>
+                                    <ComboBoxItem>GBP</ComboBoxItem>
+                                    <ComboBoxItem>CHF</ComboBoxItem>
+                                </ComboBox>
+                                <TextBox x:Name="TxtTradeAmount" Width="120" Margin="8,0,0,0" />
+                                <Button x:Name="BtnBuy" Click="BtnBuy_Click" Margin="8,0,0,0">Buy</Button>
+                                <Button x:Name="BtnSell" Click="BtnSell_Click" Margin="8,0,0,0">Sell</Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Balances & History (spans two columns) -->
+                    <Border Padding="12" Background="White" CornerRadius="6" Margin="6" BorderBrush="#E6EEF8" BorderThickness="1" Grid.ColumnSpan="2">
+                        <StackPanel>
+                            <TextBlock Text="Balances &amp; Transaction History" FontWeight="SemiBold" />
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button x:Name="BtnShowBalances" Click="BtnShowBalances_Click" Width="160">Show Balances</Button>
+                                <Button x:Name="BtnShowHistory" Click="BtnShowHistory_Click" Width="180" Margin="8,0,0,0">Show Transaction History</Button>
+                            </StackPanel>
+                            <TextBox x:Name="TxtOutput" Margin="0,12,0,0" AcceptsReturn="True" Height="220" TextWrapping="Wrap" IsReadOnly="True" VerticalScrollBarVisibility="Auto" />
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

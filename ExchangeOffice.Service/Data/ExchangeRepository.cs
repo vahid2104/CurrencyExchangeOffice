@@ -47,6 +47,49 @@ namespace ExchangeOffice.Service.Data
             }
         }
 
+        public int RegisterUser(string fullName, string username, string passwordHash)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "INSERT INTO dbo.Users (FullName, Username, PasswordHash) VALUES (@FullName, @Username, @PasswordHash); SELECT SCOPE_IDENTITY();";
+                cmd.Parameters.AddWithValue("@FullName", fullName);
+                cmd.Parameters.AddWithValue("@Username", username);
+                cmd.Parameters.AddWithValue("@PasswordHash", passwordHash);
+                conn.Open();
+                var idObj = cmd.ExecuteScalar();
+                return Convert.ToInt32(idObj);
+            }
+        }
+
+        public int LoginUser(string username, string passwordHash)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "SELECT UserId FROM dbo.Users WHERE Username = @Username AND PasswordHash = @PasswordHash";
+                cmd.Parameters.AddWithValue("@Username", username);
+                cmd.Parameters.AddWithValue("@PasswordHash", passwordHash);
+                conn.Open();
+                var res = cmd.ExecuteScalar();
+                if (res == null)
+                    return -1;
+                return Convert.ToInt32(res);
+            }
+        }
+
+        public bool UsernameExists(string username)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "SELECT COUNT(1) FROM dbo.Users WHERE Username = @Username";
+                cmd.Parameters.AddWithValue("@Username", username);
+                conn.Open();
+                return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+            }
+        }
+
         public bool UserExists(int userId)
         {
             using (var conn = new SqlConnection(_connectionString))

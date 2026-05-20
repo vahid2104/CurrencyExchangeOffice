@@ -36,6 +36,12 @@ namespace ExchangeServiceReference
 
         [OperationContract]
         string GetHistoricalExchangeRates(string currencyCode, string startDate, string endDate);
+
+        [OperationContract]
+        int RegisterUser(string fullName, string username, string password);
+
+        [OperationContract]
+        int LoginUser(string username, string password);
     }
 
     // Lightweight client proxy using ClientBase<T>
@@ -91,6 +97,16 @@ namespace ExchangeServiceReference
         public string GetHistoricalExchangeRates(string currencyCode, string startDate, string endDate)
         {
             return Channel.GetHistoricalExchangeRates(currencyCode, startDate, endDate);
+        }
+
+        public int RegisterUser(string fullName, string username, string password)
+        {
+            return Channel.RegisterUser(fullName, username, password);
+        }
+
+        public int LoginUser(string username, string password)
+        {
+            return Channel.LoginUser(username, password);
         }
     }
 }
