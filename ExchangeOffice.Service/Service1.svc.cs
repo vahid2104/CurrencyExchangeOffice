@@ -12,13 +12,7 @@ namespace ExchangeOffice.Service
 {
     public class Service1 : IService1
     {
-        // Simple in-memory storage
-        private static readonly object _lock = new object();
-        private static readonly Dictionary<int, UserAccount> _users = new Dictionary<int, UserAccount>();
-        private static int _nextUserId = 1;
-        // Transactions in-memory
-        private static readonly List<Transaction> _transactions = new List<Transaction>();
-        private static int _nextTransactionId = 1;
+        private readonly Data.ExchangeRepository _repo = new Data.ExchangeRepository();
 
         // Supported currencies - PLN is base
         private static readonly HashSet<string> _supportedCurrencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -81,21 +75,13 @@ namespace ExchangeOffice.Service
         {
             if (string.IsNullOrWhiteSpace(fullName))
                 throw new FaultException("Full name must be provided.");
-
-            lock (_lock)
+            try
             {
-                var user = new UserAccount
-                {
-                    UserId = _nextUserId++,
-                    FullName = fullName.Trim(),
-                    Balances = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
-                    {
-                        { "PLN", 0m }
-                    }
-                };
-
-                _users[user.UserId] = user;
-                return user.UserId;
+                return _repo.CreateUser(fullName.Trim());
+            }
+            catch (Exception ex)
+            {
+                throw new FaultException($"Error creating user: {ex.Message}");
             }
         }
 
@@ -105,59 +91,42 @@ namespace ExchangeOffice.Service
 
             if (amount <= 0)
                 throw new FaultException("Amount must be greater than zero.");
+            if (!_supportedCurrencies.Contains(currencyCode))
+                throw new FaultException($"Currency '{currencyCode}' is not supported.");
 
-            lock (_lock)
+            try
             {
-                if (!_users.TryGetValue(userId, out var user))
-                    throw new FaultException($"User with id {userId} does not exist.");
-
-                if (!_supportedCurrencies.Contains(currencyCode))
-                    throw new FaultException($"Currency '{currencyCode}' is not supported.");
-
-                if (!user.Balances.ContainsKey(currencyCode))
-                    user.Balances[currencyCode] = 0m;
-
-                user.Balances[currencyCode] += amount;
-
-                // Record transaction
-                var txn = new Transaction
-                {
-                    TransactionId = _nextTransactionId++,
-                    UserId = userId,
-                    Type = "TOP_UP",
-                    CurrencyCode = currencyCode,
-                    Amount = amount,
-                    Rate = currencyCode == "PLN" ? 1m : 0m,
-                    PlnAmount = currencyCode == "PLN" ? decimal.Round(amount, 2) : 0m,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _transactions.Add(txn);
-
-                return user.Balances[currencyCode];
+                return _repo.TopUpBalance(userId, currencyCode, amount);
+            }
+            catch (InvalidOperationException iox)
+            {
+                throw new FaultException(iox.Message);
+            }
+            catch (Exception ex)
+            {
+                throw new FaultException($"Error topping up balance: {ex.Message}");
             }
         }
 
         public string GetUserBalances(int userId)
         {
-            lock (_lock)
+            try
             {
-                if (!_users.TryGetValue(userId, out var user))
-                    throw new FaultException($"User with id {userId} does not exist.");
-
-                // Ensure all supported currencies appear
-                foreach (var c in _supportedCurrencies)
-                {
-                    if (!user.Balances.ContainsKey(c))
-                        user.Balances[c] = 0m;
-                }
+                var balances = _repo.GetUserBalances(userId);
+                // ensure all supported currencies present
+                var dict = _supportedCurrencies.ToDictionary(c => c, c => 0m, StringComparer.OrdinalIgnoreCase);
+                foreach (var b in balances)
+                    dict[b.CurrencyCode] = b.Amount;
 
                 var sb = new StringBuilder();
-                foreach (var c in user.Balances.Keys.OrderBy(k => k))
-                {
-                    sb.AppendLine($"{c}: {user.Balances[c]:0.00}");
-                }
+                foreach (var c in dict.Keys.OrderBy(k => k))
+                    sb.AppendLine($"{c}: {dict[c]:0.00}");
 
                 return sb.ToString().TrimEnd();
+            }
+            catch (Exception ex)
+            {
+                throw new FaultException($"Error reading balances: {ex.Message}");
             }
         }
 
@@ -178,42 +147,17 @@ namespace ExchangeOffice.Service
                 throw new FaultException($"Currency '{currencyCode}' is not supported.");
 
             var rate = GetCurrentExchangeRate(currencyCode);
-            var requiredPln = decimal.Round(foreignAmount * rate, 2);
-
-            lock (_lock)
+            try
             {
-                if (!_users.TryGetValue(userId, out var user))
-                    throw new FaultException($"User with id {userId} does not exist.");
-
-                if (!user.Balances.TryGetValue("PLN", out var plnBalance))
-                    plnBalance = 0m;
-
-                if (plnBalance < requiredPln)
-                    throw new FaultException($"Insufficient PLN balance. Required: {requiredPln:0.00}, Available: {plnBalance:0.00}");
-
-                // subtract PLN
-                user.Balances["PLN"] = plnBalance - requiredPln;
-
-                if (!user.Balances.ContainsKey(currencyCode))
-                    user.Balances[currencyCode] = 0m;
-
-                user.Balances[currencyCode] += foreignAmount;
-
-                // Record transaction
-                var buyTxn = new Transaction
-                {
-                    TransactionId = _nextTransactionId++,
-                    UserId = userId,
-                    Type = "BUY",
-                    CurrencyCode = currencyCode,
-                    Amount = foreignAmount,
-                    Rate = rate,
-                    PlnAmount = requiredPln,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _transactions.Add(buyTxn);
-
-                return user.Balances[currencyCode];
+                return _repo.BuyCurrency(userId, currencyCode, foreignAmount, rate);
+            }
+            catch (InvalidOperationException iox)
+            {
+                throw new FaultException(iox.Message);
+            }
+            catch (Exception ex)
+            {
+                throw new FaultException($"Error executing buy: {ex.Message}");
             }
         }
 
@@ -234,61 +178,39 @@ namespace ExchangeOffice.Service
                 throw new FaultException($"Currency '{currencyCode}' is not supported.");
 
             var rate = GetCurrentExchangeRate(currencyCode);
-            var plnToCredit = decimal.Round(foreignAmount * rate, 2);
-
-            lock (_lock)
+            try
             {
-                if (!_users.TryGetValue(userId, out var user))
-                    throw new FaultException($"User with id {userId} does not exist.");
-
-                if (!user.Balances.TryGetValue(currencyCode, out var currBalance))
-                    currBalance = 0m;
-
-                if (currBalance < foreignAmount)
-                    throw new FaultException($"Insufficient {currencyCode} balance. Requested: {foreignAmount:0.00}, Available: {currBalance:0.00}");
-
-                user.Balances[currencyCode] = currBalance - foreignAmount;
-
-                if (!user.Balances.ContainsKey("PLN"))
-                    user.Balances["PLN"] = 0m;
-
-                user.Balances["PLN"] += plnToCredit;
-                // Record transaction
-                var sellTxn = new Transaction
-                {
-                    TransactionId = _nextTransactionId++,
-                    UserId = userId,
-                    Type = "SELL",
-                    CurrencyCode = currencyCode,
-                    Amount = foreignAmount,
-                    Rate = rate,
-                    PlnAmount = plnToCredit,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _transactions.Add(sellTxn);
-
-                return user.Balances["PLN"];
+                return _repo.SellCurrency(userId, currencyCode, foreignAmount, rate);
+            }
+            catch (InvalidOperationException iox)
+            {
+                throw new FaultException(iox.Message);
+            }
+            catch (Exception ex)
+            {
+                throw new FaultException($"Error executing sell: {ex.Message}");
             }
         }
 
         public string GetTransactionHistory(int userId)
         {
-            lock (_lock)
+            try
             {
-                if (!_users.ContainsKey(userId))
-                    throw new FaultException($"User with id {userId} does not exist.");
-
-                var userTxns = _transactions.Where(t => t.UserId == userId).OrderBy(t => t.TransactionId).ToList();
-                if (userTxns.Count == 0)
+                var txns = _repo.GetTransactionHistory(userId);
+                if (txns.Count == 0)
                     return "No transactions found for this user.";
 
                 var sb = new StringBuilder();
-                foreach (var t in userTxns)
+                foreach (var t in txns)
                 {
                     sb.AppendLine($"[{t.CreatedAt:u}] Id:{t.TransactionId} Type:{t.Type} Currency:{t.CurrencyCode} Amount:{t.Amount:0.00} Rate:{t.Rate:0.00} PLN:{t.PlnAmount:0.00}");
                 }
 
                 return sb.ToString().TrimEnd();
+            }
+            catch (Exception ex)
+            {
+                throw new FaultException($"Error reading transaction history: {ex.Message}");
             }
         }
     }
