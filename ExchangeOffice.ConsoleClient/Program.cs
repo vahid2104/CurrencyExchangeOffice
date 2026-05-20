@@ -90,6 +90,10 @@ namespace ExchangeOffice.ConsoleClient
                     // 8. Print balances
                     Console.WriteLine("Balances after selling USD:");
                     Console.WriteLine(channel.GetUserBalances(userId));
+
+                    // 9. Print transaction history
+                    Console.WriteLine("\nTransaction history:");
+                    Console.WriteLine(channel.GetTransactionHistory(userId));
                 }
                 catch (FaultException fex)
                 {

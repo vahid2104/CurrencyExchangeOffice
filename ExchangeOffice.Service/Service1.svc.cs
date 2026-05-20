@@ -16,6 +16,9 @@ namespace ExchangeOffice.Service
         private static readonly object _lock = new object();
         private static readonly Dictionary<int, UserAccount> _users = new Dictionary<int, UserAccount>();
         private static int _nextUserId = 1;
+        // Transactions in-memory
+        private static readonly List<Transaction> _transactions = new List<Transaction>();
+        private static int _nextTransactionId = 1;
 
         // Supported currencies - PLN is base
         private static readonly HashSet<string> _supportedCurrencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -115,6 +118,21 @@ namespace ExchangeOffice.Service
                     user.Balances[currencyCode] = 0m;
 
                 user.Balances[currencyCode] += amount;
+
+                // Record transaction
+                var txn = new Transaction
+                {
+                    TransactionId = _nextTransactionId++,
+                    UserId = userId,
+                    Type = "TOP_UP",
+                    CurrencyCode = currencyCode,
+                    Amount = amount,
+                    Rate = currencyCode == "PLN" ? 1m : 0m,
+                    PlnAmount = currencyCode == "PLN" ? decimal.Round(amount, 2) : 0m,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _transactions.Add(txn);
+
                 return user.Balances[currencyCode];
             }
         }
@@ -181,6 +199,20 @@ namespace ExchangeOffice.Service
 
                 user.Balances[currencyCode] += foreignAmount;
 
+                // Record transaction
+                var buyTxn = new Transaction
+                {
+                    TransactionId = _nextTransactionId++,
+                    UserId = userId,
+                    Type = "BUY",
+                    CurrencyCode = currencyCode,
+                    Amount = foreignAmount,
+                    Rate = rate,
+                    PlnAmount = requiredPln,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _transactions.Add(buyTxn);
+
                 return user.Balances[currencyCode];
             }
         }
@@ -221,8 +253,42 @@ namespace ExchangeOffice.Service
                     user.Balances["PLN"] = 0m;
 
                 user.Balances["PLN"] += plnToCredit;
+                // Record transaction
+                var sellTxn = new Transaction
+                {
+                    TransactionId = _nextTransactionId++,
+                    UserId = userId,
+                    Type = "SELL",
+                    CurrencyCode = currencyCode,
+                    Amount = foreignAmount,
+                    Rate = rate,
+                    PlnAmount = plnToCredit,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _transactions.Add(sellTxn);
 
                 return user.Balances["PLN"];
+            }
+        }
+
+        public string GetTransactionHistory(int userId)
+        {
+            lock (_lock)
+            {
+                if (!_users.ContainsKey(userId))
+                    throw new FaultException($"User with id {userId} does not exist.");
+
+                var userTxns = _transactions.Where(t => t.UserId == userId).OrderBy(t => t.TransactionId).ToList();
+                if (userTxns.Count == 0)
+                    return "No transactions found for this user.";
+
+                var sb = new StringBuilder();
+                foreach (var t in userTxns)
+                {
+                    sb.AppendLine($"[{t.CreatedAt:u}] Id:{t.TransactionId} Type:{t.Type} Currency:{t.CurrencyCode} Amount:{t.Amount:0.00} Rate:{t.Rate:0.00} PLN:{t.PlnAmount:0.00}");
+                }
+
+                return sb.ToString().TrimEnd();
             }
         }
     }
@@ -262,5 +328,18 @@ namespace ExchangeOffice.Service
         public int UserId { get; set; }
         public string FullName { get; set; }
         public Dictionary<string, decimal> Balances { get; set; }
+    }
+
+    // Transaction model
+    public class Transaction
+    {
+        public int TransactionId { get; set; }
+        public int UserId { get; set; }
+        public string Type { get; set; }
+        public string CurrencyCode { get; set; }
+        public decimal Amount { get; set; }
+        public decimal Rate { get; set; }
+        public decimal PlnAmount { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

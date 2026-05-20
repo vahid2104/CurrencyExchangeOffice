@@ -28,5 +28,8 @@ namespace ExchangeOffice.Service
 
         [OperationContract]
         decimal SellCurrency(int userId, string currencyCode, decimal foreignAmount);
+
+        [OperationContract]
+        string GetTransactionHistory(int userId);
     }
 }

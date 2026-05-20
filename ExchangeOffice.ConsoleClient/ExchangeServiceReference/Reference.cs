@@ -30,6 +30,9 @@ namespace ExchangeServiceReference
 
         [OperationContract]
         decimal SellCurrency(int userId, string currencyCode, decimal foreignAmount);
+
+        [OperationContract]
+        string GetTransactionHistory(int userId);
     }
 
     // Lightweight client proxy using ClientBase<T>
@@ -75,6 +78,11 @@ namespace ExchangeServiceReference
         public decimal SellCurrency(int userId, string currencyCode, decimal foreignAmount)
         {
             return Channel.SellCurrency(userId, currencyCode, foreignAmount);
+        }
+
+        public string GetTransactionHistory(int userId)
+        {
+            return Channel.GetTransactionHistory(userId);
         }
     }
 }
