@@ -13,5 +13,20 @@ namespace ExchangeOffice.Service
 
         [OperationContract]
         decimal GetCurrentExchangeRate(string currencyCode);
+
+        [OperationContract]
+        int CreateUser(string fullName);
+
+        [OperationContract]
+        decimal TopUpBalance(int userId, string currencyCode, decimal amount);
+
+        [OperationContract]
+        string GetUserBalances(int userId);
+
+        [OperationContract]
+        decimal BuyCurrency(int userId, string currencyCode, decimal foreignAmount);
+
+        [OperationContract]
+        decimal SellCurrency(int userId, string currencyCode, decimal foreignAmount);
     }
 }

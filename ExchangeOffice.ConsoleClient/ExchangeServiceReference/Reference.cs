@@ -15,6 +15,21 @@ namespace ExchangeServiceReference
 
         [OperationContract]
         decimal GetCurrentExchangeRate(string currencyCode);
+
+        [OperationContract]
+        int CreateUser(string fullName);
+
+        [OperationContract]
+        decimal TopUpBalance(int userId, string currencyCode, decimal amount);
+
+        [OperationContract]
+        string GetUserBalances(int userId);
+
+        [OperationContract]
+        decimal BuyCurrency(int userId, string currencyCode, decimal foreignAmount);
+
+        [OperationContract]
+        decimal SellCurrency(int userId, string currencyCode, decimal foreignAmount);
     }
 
     // Lightweight client proxy using ClientBase<T>
@@ -35,6 +50,31 @@ namespace ExchangeServiceReference
         public decimal GetCurrentExchangeRate(string currencyCode)
         {
             return Channel.GetCurrentExchangeRate(currencyCode);
+        }
+
+        public int CreateUser(string fullName)
+        {
+            return Channel.CreateUser(fullName);
+        }
+
+        public decimal TopUpBalance(int userId, string currencyCode, decimal amount)
+        {
+            return Channel.TopUpBalance(userId, currencyCode, amount);
+        }
+
+        public string GetUserBalances(int userId)
+        {
+            return Channel.GetUserBalances(userId);
+        }
+
+        public decimal BuyCurrency(int userId, string currencyCode, decimal foreignAmount)
+        {
+            return Channel.BuyCurrency(userId, currencyCode, foreignAmount);
+        }
+
+        public decimal SellCurrency(int userId, string currencyCode, decimal foreignAmount)
+        {
+            return Channel.SellCurrency(userId, currencyCode, foreignAmount);
         }
     }
 }
