@@ -1,0 +1,83 @@
+﻿
+<Window x:Class="ExchangeOffice.WpfClient.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ExchangeOffice.WpfClient"
+        mc:Ignorable="d"
+        Title="Exchange Office" Height="650" Width="800">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Service Status -->
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,8">
+            <Button x:Name="BtnStatus" Width="160" Click="BtnStatus_Click">Check Service Status</Button>
+            <TextBox x:Name="TxtStatus" Width="580" Margin="8,0,0,0" IsReadOnly="True"/>
+        </StackPanel>
+
+        <!-- Create User -->
+        <GroupBox Header="Create User" Grid.Row="1" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal" Margin="6">
+                <TextBox x:Name="TxtFullName" Width="360"/>
+                <Button x:Name="BtnCreateUser" Width="120" Margin="8,0,0,0" Click="BtnCreateUser_Click">Create User</Button>
+                <TextBox x:Name="TxtUserId" Width="120" Margin="8,0,0,0" IsReadOnly="True"/>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Top Up -->
+        <GroupBox Header="Top Up Balance" Grid.Row="2" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal" Margin="6">
+                <TextBox x:Name="TxtTopUpUserId" Width="80"/>
+                <ComboBox x:Name="CmbTopUpCurrency" Width="80" Margin="8,0,0,0">
+                    <ComboBoxItem>PLN</ComboBoxItem>
+                    <ComboBoxItem>USD</ComboBoxItem>
+                    <ComboBoxItem>EUR</ComboBoxItem>
+                    <ComboBoxItem>GBP</ComboBoxItem>
+                    <ComboBoxItem>CHF</ComboBoxItem>
+                </ComboBox>
+                <TextBox x:Name="TxtTopUpAmount" Width="120" Margin="8,0,0,0"/>
+                <Button x:Name="BtnTopUp" Width="140" Margin="8,0,0,0" Click="BtnTopUp_Click">Top Up Balance</Button>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Rates -->
+        <StackPanel Orientation="Horizontal" Grid.Row="3" Margin="0,0,0,8">
+            <Button x:Name="BtnUsdRate" Width="120" Click="BtnUsdRate_Click">Get USD Rate</Button>
+            <Button x:Name="BtnEurRate" Width="120" Margin="8,0,0,0" Click="BtnEurRate_Click">Get EUR Rate</Button>
+            <TextBox x:Name="TxtRates" Width="520" Margin="8,0,0,0" IsReadOnly="True"/>
+        </StackPanel>
+
+        <!-- Buy / Sell -->
+        <GroupBox Header="Buy / Sell Currency" Grid.Row="4" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal" Margin="6">
+                <TextBox x:Name="TxtTradeUserId" Width="80"/>
+                <ComboBox x:Name="CmbTradeCurrency" Width="80" Margin="8,0,0,0">
+                    <ComboBoxItem>USD</ComboBoxItem>
+                    <ComboBoxItem>EUR</ComboBoxItem>
+                    <ComboBoxItem>GBP</ComboBoxItem>
+                    <ComboBoxItem>CHF</ComboBoxItem>
+                </ComboBox>
+                <TextBox x:Name="TxtTradeAmount" Width="120" Margin="8,0,0,0"/>
+                <Button x:Name="BtnBuy" Width="120" Margin="8,0,0,0" Click="BtnBuy_Click">Buy Currency</Button>
+                <Button x:Name="BtnSell" Width="120" Margin="8,0,0,0" Click="BtnSell_Click">Sell Currency</Button>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Results -->
+        <StackPanel Orientation="Horizontal" Grid.Row="5">
+            <StackPanel Orientation="Vertical" Width="220">
+                <Button x:Name="BtnShowBalances" Width="200" Margin="0,0,0,6" Click="BtnShowBalances_Click">Show Balances</Button>
+                <Button x:Name="BtnShowHistory" Width="200" Click="BtnShowHistory_Click">Show Transaction History</Button>
+            </StackPanel>
+            <TextBox x:Name="TxtOutput" Margin="12,0,0,0" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" TextWrapping="Wrap" IsReadOnly="True"/>
+        </StackPanel>
+    </Grid>
+</Window>
