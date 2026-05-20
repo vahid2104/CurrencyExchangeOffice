@@ -68,7 +68,6 @@ namespace ExchangeOffice.Service.Data
                 tran.Begin();
                 try
                 {
-                    // ensure user exists
                     using (var cmdU = conn.CreateCommand())
                     {
                         cmdU.Transaction = tran.Transaction;
@@ -91,7 +90,6 @@ SELECT Amount FROM dbo.Balances WHERE UserId = @UserId AND CurrencyCode = @Curre
                         cmd.Parameters.AddWithValue("@Amount", amount);
                         var result = cmd.ExecuteScalar();
 
-                        // insert transaction
                         using (var cmdT = conn.CreateCommand())
                         {
                             cmdT.Transaction = tran.Transaction;
@@ -193,7 +191,6 @@ FROM dbo.Transactions WHERE UserId = @UserId ORDER BY TransactionId";
 
                     var requiredPln = Math.Round(foreignAmount * rate, 2);
 
-                    // check PLN balance
                     decimal plnBal = 0m;
                     using (var cmdP = conn.CreateCommand())
                     {
@@ -205,7 +202,6 @@ FROM dbo.Transactions WHERE UserId = @UserId ORDER BY TransactionId";
                         if (plnBal < requiredPln) throw new InvalidOperationException($"Insufficient PLN balance. Required: {requiredPln:0.00}, Available: {plnBal:0.00}");
                     }
 
-                    // subtract PLN
                     using (var cmd = conn.CreateCommand())
                     {
                         cmd.Transaction = tran.Transaction;
@@ -215,7 +211,6 @@ FROM dbo.Transactions WHERE UserId = @UserId ORDER BY TransactionId";
                         cmd.ExecuteNonQuery();
                     }
 
-                    // add foreign currency
                     using (var cmd = conn.CreateCommand())
                     {
                         cmd.Transaction = tran.Transaction;
@@ -229,7 +224,6 @@ SELECT Amount FROM dbo.Balances WHERE UserId=@UserId AND CurrencyCode=@Currency;
                         cmd.Parameters.AddWithValue("@AddAmt", foreignAmount);
                         var newAmount = Convert.ToDecimal(cmd.ExecuteScalar());
 
-                        // insert transaction
                         using (var cmdT = conn.CreateCommand())
                         {
                             cmdT.Transaction = tran.Transaction;
@@ -264,7 +258,6 @@ VALUES (@UserId, 'BUY', @Currency, @Amount, @Rate, @PlnAmount);";
                 tran.Begin();
                 try
                 {
-                    // check user exists
                     using (var cmdU = conn.CreateCommand())
                     {
                         cmdU.Transaction = tran.Transaction;
@@ -274,7 +267,6 @@ VALUES (@UserId, 'BUY', @Currency, @Amount, @Rate, @PlnAmount);";
                         if (!exists) throw new InvalidOperationException($"User with id {userId} does not exist.");
                     }
 
-                    // check foreign balance
                     decimal currBal = 0m;
                     using (var cmdC = conn.CreateCommand())
                     {
@@ -289,7 +281,6 @@ VALUES (@UserId, 'BUY', @Currency, @Amount, @Rate, @PlnAmount);";
 
                     var plnToCredit = Math.Round(foreignAmount * rate, 2);
 
-                    // subtract foreign
                     using (var cmd = conn.CreateCommand())
                     {
                         cmd.Transaction = tran.Transaction;
@@ -300,7 +291,6 @@ VALUES (@UserId, 'BUY', @Currency, @Amount, @Rate, @PlnAmount);";
                         cmd.ExecuteNonQuery();
                     }
 
-                    // add PLN
                     using (var cmd = conn.CreateCommand())
                     {
                         cmd.Transaction = tran.Transaction;
@@ -313,7 +303,6 @@ SELECT Amount FROM dbo.Balances WHERE UserId=@UserId AND CurrencyCode='PLN';";
                         cmd.Parameters.AddWithValue("@AddAmt", plnToCredit);
                         var newPln = Convert.ToDecimal(cmd.ExecuteScalar());
 
-                        // insert transaction
                         using (var cmdT = conn.CreateCommand())
                         {
                             cmdT.Transaction = tran.Transaction;

@@ -33,6 +33,9 @@ namespace ExchangeServiceReference
 
         [OperationContract]
         string GetTransactionHistory(int userId);
+
+        [OperationContract]
+        string GetHistoricalExchangeRates(string currencyCode, string startDate, string endDate);
     }
 
     // Lightweight client proxy using ClientBase<T>
@@ -83,6 +86,11 @@ namespace ExchangeServiceReference
         public string GetTransactionHistory(int userId)
         {
             return Channel.GetTransactionHistory(userId);
+        }
+
+        public string GetHistoricalExchangeRates(string currencyCode, string startDate, string endDate)
+        {
+            return Channel.GetHistoricalExchangeRates(currencyCode, startDate, endDate);
         }
     }
 }

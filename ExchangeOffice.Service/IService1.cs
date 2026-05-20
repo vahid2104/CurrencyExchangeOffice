@@ -31,5 +31,8 @@ namespace ExchangeOffice.Service
 
         [OperationContract]
         string GetTransactionHistory(int userId);
+
+        [OperationContract]
+        string GetHistoricalExchangeRates(string currencyCode, string startDate, string endDate);
     }
 }

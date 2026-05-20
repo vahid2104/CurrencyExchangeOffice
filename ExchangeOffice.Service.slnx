@@ -1,5 +1,5 @@
 <Solution>
-  <Project Path="ExchangeOffice.ConsoleClient/ExchangeOffice.ConsoleClient.csproj" />
-  <Project Path="ExchangeOffice.Service/ExchangeOffice.Service.csproj" />
-  <Project Path="ExchangeOffice.WpfClient/ExchangeOffice.WpfClient.csproj" />
+  <Project Path="ExchangeOffice.ConsoleClient/ExchangeOffice.ConsoleClient.csproj" Id="b56c9aa8-452e-4160-9714-4d3ebd04ebef" />
+  <Project Path="ExchangeOffice.Service/ExchangeOffice.Service.csproj" Id="b17408dc-1957-416d-99f4-998ee6b56df6" />
+  <Project Path="ExchangeOffice.WpfClient/ExchangeOffice.WpfClient.csproj" Id="d91c5b3b-9846-4e61-af16-f611fb45bcdb" />
 </Solution>

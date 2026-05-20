@@ -24,15 +24,12 @@ namespace ExchangeOffice.ConsoleClient
                 channel = factory.CreateChannel();
                 clientChannel = (IClientChannel)channel;
 
-                // Call GetServiceStatus
                 string status = channel.GetServiceStatus();
                 Console.WriteLine("Service status: " + status);
 
-                // Call Add
                 decimal result = channel.Add(10.50m, 20.25m);
                 Console.WriteLine($"Add(10.50, 20.25) = {result}");
 
-                // Call GetCurrentExchangeRate for USD and EUR
                 try
                 {
                     decimal usdRate = channel.GetCurrentExchangeRate("USD");
@@ -53,45 +50,46 @@ namespace ExchangeOffice.ConsoleClient
                     Console.WriteLine("Failed to get EUR rate: " + ex.Message);
                 }
 
-                // Demo new exchange office operations
+                try
+                {
+                    Console.WriteLine("\nHistorical USD rates 2026-01-01 to 2026-01-10:");
+                    var hist = channel.GetHistoricalExchangeRates("USD", "2026-01-01", "2026-01-10");
+                    Console.WriteLine(hist);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Failed to get historical rates: " + ex.Message);
+                }
+
                 try
                 {
                     Console.WriteLine("\n--- Exchange Office Demo ---");
 
-                    // 1. Create user
                     int userId = channel.CreateUser("Test User");
                     Console.WriteLine($"Created user 'Test User' with id: {userId}");
 
-                    // 2. Top up 1000 PLN
                     var newPln = channel.TopUpBalance(userId, "PLN", 1000m);
                     Console.WriteLine($"Topped up PLN: new PLN balance = {newPln:0.00}");
 
-                    // 3. Print balances
                     Console.WriteLine("Balances after top-up:");
                     Console.WriteLine(channel.GetUserBalances(userId));
 
-                    // 4. Show USD and EUR rates
                     var usd = channel.GetCurrentExchangeRate("USD");
                     var eur = channel.GetCurrentExchangeRate("EUR");
                     Console.WriteLine($"Rates: USD={usd:0.####}, EUR={eur:0.####}");
 
-                    // 5. Buy 10 USD
                     var usdBalance = channel.BuyCurrency(userId, "USD", 10m);
                     Console.WriteLine($"Bought 10 USD, USD balance now: {usdBalance:0.00}");
 
-                    // 6. Print balances
                     Console.WriteLine("Balances after buying USD:");
                     Console.WriteLine(channel.GetUserBalances(userId));
 
-                    // 7. Sell 5 USD
                     var plnAfterSell = channel.SellCurrency(userId, "USD", 5m);
                     Console.WriteLine($"Sold 5 USD, PLN balance now: {plnAfterSell:0.00}");
 
-                    // 8. Print balances
                     Console.WriteLine("Balances after selling USD:");
                     Console.WriteLine(channel.GetUserBalances(userId));
 
-                    // 9. Print transaction history
                     Console.WriteLine("\nTransaction history:");
                     Console.WriteLine(channel.GetTransactionHistory(userId));
                 }
@@ -104,7 +102,6 @@ namespace ExchangeOffice.ConsoleClient
                     Console.WriteLine("Error in demo: " + ex.Message);
                 }
 
-                // Close channel gracefully
                 try
                 {
                     clientChannel?.Close();

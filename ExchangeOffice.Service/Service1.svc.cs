@@ -25,6 +25,83 @@ namespace ExchangeOffice.Service
             return $"Exchange Office WCF Service is running. Server time: {DateTime.Now}";
         }
 
+        public string GetHistoricalExchangeRates(string currencyCode, string startDate, string endDate)
+        {
+            if (string.IsNullOrWhiteSpace(currencyCode))
+                throw new FaultException("Currency code must be provided.");
+
+            currencyCode = currencyCode.Trim().ToLowerInvariant();
+
+            // Only allow these currencies for historical queries
+            var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "usd", "eur", "gbp", "chf" };
+            if (!allowed.Contains(currencyCode))
+                throw new FaultException($"Currency '{currencyCode}' is not supported for historical rates. Supported: USD, EUR, GBP, CHF.");
+
+            if (!DateTime.TryParse(startDate, out var sd))
+                throw new FaultException("startDate is invalid. Expected format: yyyy-MM-dd.");
+
+            if (!DateTime.TryParse(endDate, out var ed))
+                throw new FaultException("endDate is invalid. Expected format: yyyy-MM-dd.");
+
+            if (sd > ed)
+                throw new FaultException("startDate must be less than or equal to endDate.");
+
+            var s = sd.ToString("yyyy-MM-dd");
+            var e = ed.ToString("yyyy-MM-dd");
+
+            var url = $"http://api.nbp.pl/api/exchangerates/rates/a/{currencyCode}/{s}/{e}/?format=json";
+
+            try
+            {
+                using (var client = new WebClient())
+                {
+                    client.Encoding = Encoding.UTF8;
+                    var json = client.DownloadString(url);
+
+                    var serializer = new DataContractJsonSerializer(typeof(NbpHistoricalResponse));
+                    using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(json)))
+                    {
+                        var response = (NbpHistoricalResponse)serializer.ReadObject(ms);
+                        if (response == null || response.rates == null || response.rates.Length == 0)
+                            throw new FaultException($"No historical rates found for '{currencyCode}' between {s} and {e}.");
+
+                        var sb = new StringBuilder();
+                        sb.AppendLine($"Code: {response.code}");
+                        sb.AppendLine($"Table: {response.table}");
+                        sb.AppendLine($"Currency: {response.currency}");
+                        sb.AppendLine("Rates:");
+                        foreach (var r in response.rates)
+                        {
+                            sb.AppendLine($"{r.effectiveDate}: {r.mid:0.####}");
+                        }
+
+                        return sb.ToString().TrimEnd();
+                    }
+                }
+            }
+            catch (WebException wex)
+            {
+                throw new FaultException($"Error contacting NBP API: {wex.Message}");
+            }
+            catch (SerializationException sex)
+            {
+                throw new FaultException($"Error parsing NBP response: {sex.Message}");
+            }
+        }
+
+        [DataContract]
+        private class NbpHistoricalResponse
+        {
+            [DataMember]
+            public string table { get; set; }
+            [DataMember]
+            public string currency { get; set; }
+            [DataMember]
+            public string code { get; set; }
+            [DataMember]
+            public NbpRateItem[] rates { get; set; }
+        }
+
         public decimal Add(decimal firstNumber, decimal secondNumber)
         {
             return firstNumber + secondNumber;
@@ -244,15 +321,12 @@ namespace ExchangeOffice.Service
         public decimal mid { get; set; }
     }
 
-    // Simple models for user accounts
     public class UserAccount
     {
         public int UserId { get; set; }
         public string FullName { get; set; }
         public Dictionary<string, decimal> Balances { get; set; }
     }
-
-    // Transaction model
     public class Transaction
     {
         public int TransactionId { get; set; }

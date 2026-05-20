@@ -4,8 +4,6 @@ using System.ServiceModel.Channels;
 using System.Windows;
 using System.Windows.Controls;
 // Lightweight manual proxy types embedded so the WPF project compiles without modifying the project file.
-using System.ServiceModel;
-using System.ServiceModel.Channels;
 
 namespace ExchangeOffice.WpfClient
 {
@@ -38,6 +36,9 @@ namespace ExchangeOffice.WpfClient
 
         [OperationContract]
         string GetTransactionHistory(int userId);
+
+        [OperationContract]
+        string GetHistoricalExchangeRates(string currencyCode, string startDate, string endDate);
     }
 
     // Simple ClientBase wrapper
@@ -53,6 +54,7 @@ namespace ExchangeOffice.WpfClient
         public decimal BuyCurrency(int userId, string currencyCode, decimal foreignAmount) => Channel.BuyCurrency(userId, currencyCode, foreignAmount);
         public decimal SellCurrency(int userId, string currencyCode, decimal foreignAmount) => Channel.SellCurrency(userId, currencyCode, foreignAmount);
         public string GetTransactionHistory(int userId) => Channel.GetTransactionHistory(userId);
+        public string GetHistoricalExchangeRates(string currencyCode, string startDate, string endDate) => Channel.GetHistoricalExchangeRates(currencyCode, startDate, endDate);
     }
 
     public partial class MainWindow : Window
@@ -64,6 +66,38 @@ namespace ExchangeOffice.WpfClient
         {
             InitializeComponent();
             InitializeChannel();
+        }
+
+        private void BtnHistoricalRates_Click(object sender, RoutedEventArgs e)
+        {
+            var currency = (CmbHistCurrency.SelectedItem as ComboBoxItem)?.Content?.ToString();
+            if (string.IsNullOrEmpty(currency))
+            {
+                MessageBox.Show("Select a currency.");
+                return;
+            }
+
+            var start = TxtHistStart.Text?.Trim();
+            var end = TxtHistEnd.Text?.Trim();
+            if (string.IsNullOrEmpty(start) || string.IsNullOrEmpty(end))
+            {
+                MessageBox.Show("Please enter start and end dates in yyyy-MM-dd format.");
+                return;
+            }
+
+            try
+            {
+                var result = _channel.GetHistoricalExchangeRates(currency, start, end);
+                TxtOutput.Text = result;
+            }
+            catch (FaultException fex)
+            {
+                MessageBox.Show("Service fault: " + fex.Message);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message);
+            }
         }
 
         private void InitializeChannel()
